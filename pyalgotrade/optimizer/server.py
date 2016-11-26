@@ -39,6 +39,37 @@ class Results(object):
         """Returns the result for a given set of parameters."""
         return self.__result
 
+def serve_pipe(output_pipe, barFeed, strategyParameters, address, port):
+    """Executes a server that will provide bars and strategy parameters for workers to use.
+
+    :param barFeed: The bar feed that each worker will use to backtest the strategy.
+    :type barFeed: :class:`pyalgotrade.barfeed.BarFeed`.
+    :param strategyParameters: The set of parameters to use for backtesting. An iterable object where **each element is a tuple that holds parameter values**.
+    :param address: The address to listen for incoming worker connections.
+    :type address: string.
+    :param port: The port to listen for incoming worker connections.
+    :type port: int.
+    :rtype: A :class:`Results` instance with the best results found or None if no results were obtained.
+    """
+
+    paramSource = base.ParameterSource(strategyParameters)
+    resultSinc = base.ResultSinc()
+    s = xmlrpcserver.Server(paramSource, resultSinc, barFeed, address, port)
+    logger.info("Starting server")
+    s.serve()
+    logger.info("Server finished")
+
+    ret = None
+    bestResult, bestParameters = resultSinc.getBest()
+    if bestResult is not None:
+        logger.info("Best final result %s with parameters %s" % (bestResult, bestParameters.args))
+        ret = Results(bestParameters.args, bestResult)
+    else:
+        logger.error("No results. All jobs failed or no jobs were processed.")
+
+    output_pipe.send(bestParameters.args)
+    return ret
+
 
 def serve(barFeed, strategyParameters, address, port):
     """Executes a server that will provide bars and strategy parameters for workers to use.
