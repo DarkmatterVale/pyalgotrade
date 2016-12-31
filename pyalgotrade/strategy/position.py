@@ -153,10 +153,11 @@ class Position(object):
         This is a base class and should not be used directly.
     """
 
-    def __init__(self, strategy, entryOrder, goodTillCanceled, allOrNone):
+    def __init__(self, position_id, strategy, entryOrder, goodTillCanceled, allOrNone):
         # The order must be created but not submitted.
         assert(entryOrder.isInitial())
 
+        self.__id = position_id
         self.__state = None
         self.__activeOrders = {}
         self.__shares = 0
@@ -197,6 +198,9 @@ class Position(object):
     def switchState(self, newState):
         self.__state = newState
         self.__state.onEnter(self)
+
+    def getID(self):
+        return self.__id
 
     def getStrategy(self):
         return self.__strategy
