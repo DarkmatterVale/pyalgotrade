@@ -424,7 +424,7 @@ class Position(object):
 
 # This class is reponsible for order management in long positions.
 class LongPosition(Position):
-    def __init__(self, strategy, instrument, stopPrice, limitPrice, quantity, goodTillCanceled, allOrNone):
+    def __init__(self, strategy, position_id, instrument, stopPrice, limitPrice, quantity, goodTillCanceled, allOrNone):
         if limitPrice is None and stopPrice is None:
             entryOrder = strategy.getBroker().createMarketOrder(broker.Order.Action.BUY, instrument, quantity, False)
         elif limitPrice is not None and stopPrice is None:
@@ -436,7 +436,7 @@ class LongPosition(Position):
         else:
             assert(False)
 
-        super(LongPosition, self).__init__(strategy, entryOrder, goodTillCanceled, allOrNone)
+        super(LongPosition, self).__init__(position_id, strategy, entryOrder, goodTillCanceled, allOrNone)
 
     def buildExitOrder(self, stopPrice, limitPrice):
         quantity = self.getShares()
@@ -457,7 +457,7 @@ class LongPosition(Position):
 
 # This class is reponsible for order management in short positions.
 class ShortPosition(Position):
-    def __init__(self, strategy, instrument, stopPrice, limitPrice, quantity, goodTillCanceled, allOrNone):
+    def __init__(self, strategy, position_id, instrument, stopPrice, limitPrice, quantity, goodTillCanceled, allOrNone):
         if limitPrice is None and stopPrice is None:
             entryOrder = strategy.getBroker().createMarketOrder(broker.Order.Action.SELL_SHORT, instrument, quantity, False)
         elif limitPrice is not None and stopPrice is None:
@@ -469,7 +469,7 @@ class ShortPosition(Position):
         else:
             assert(False)
 
-        super(ShortPosition, self).__init__(strategy, entryOrder, goodTillCanceled, allOrNone)
+        super(ShortPosition, self).__init__(position_id, strategy, entryOrder, goodTillCanceled, allOrNone)
 
     def buildExitOrder(self, stopPrice, limitPrice):
         quantity = self.getShares() * -1
