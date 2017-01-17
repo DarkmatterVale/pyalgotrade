@@ -137,6 +137,20 @@ def worker_process(strategyClass, address, port, workerName):
     w = MyWorker(address, port, workerName)
     w.run()
 
+def portfolio_worker_process(portfolioClass, address, port, workerName):
+    class MyWorker(Worker):
+        def runStrategy(self, barFeed, *args, **kwargs):
+            parameter_data = args[0]
+            args = tuple(args[1:])
+            strat = portfolioClass([parameter_data["symbol"]], None, None, initial_capital=parameter_data["initial_capital"])
+            strat.set_symbol_strategy(parameter_data["strategy"](*args))
+            strat.run_portfolio(barFeed)
+            return strat.getResult()
+
+    # Create a worker and run it.
+    w = MyWorker(address, port, workerName)
+    w.run()
+
 
 def run(strategyClass, address, port, workerCount=None, workerName=None):
     """Executes one or more worker processes that will run a strategy with the bars and parameters supplied by the server.
@@ -160,6 +174,37 @@ def run(strategyClass, address, port, workerCount=None, workerName=None):
     # Build the worker processes.
     for i in range(workerCount):
         workers.append(multiprocessing.Process(target=worker_process, args=(strategyClass, address, port, workerName)))
+
+    # Start workers
+    for process in workers:
+        process.start()
+
+    # Wait workers
+    for process in workers:
+        process.join()
+
+def run_portfolio(strategyClass, address, port, workerCount=None, workerName=None):
+    """Executes one or more worker processes that will run a strategy with the bars and parameters supplied by the server.
+
+    :param strategyClass: The strategy class.
+    :param address: The address of the server.
+    :type address: string.
+    :param port: The port where the server is listening for incoming connections.
+    :type port: int.
+    :param workerCount: The number of worker processes to run. If None then as many workers as CPUs are used.
+    :type workerCount: int.
+    :param workerName: A name for the worker. A name that identifies the worker. If None, the hostname is used.
+    :type workerName: string.
+    """
+
+    assert(workerCount is None or workerCount > 0)
+    if workerCount is None:
+        workerCount = multiprocessing.cpu_count()
+
+    workers = []
+    # Build the worker processes.
+    for i in range(workerCount):
+        workers.append(multiprocessing.Process(target=portfolio_worker_process, args=(strategyClass, address, port, workerName)))
 
     # Start workers
     for process in workers:
