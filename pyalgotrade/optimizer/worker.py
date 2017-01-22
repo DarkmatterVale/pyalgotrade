@@ -142,7 +142,7 @@ def portfolio_worker_process(portfolioClass, address, port, workerName):
         def runStrategy(self, barFeed, *args, **kwargs):
             parameter_data = args[0]
             args = tuple(args[1:])
-            strat = portfolioClass([parameter_data["symbol"]], None, None, initial_capital=parameter_data["initial_capital"])
+            strat = portfolioClass([parameter_data["symbol"]], None, None, None, initial_capital=parameter_data["initial_capital"])
             strat.set_symbol_strategy(parameter_data["strategy"](*args))
             strat.run_portfolio(barFeed)
             return strat.getResult()
